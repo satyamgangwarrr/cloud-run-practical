@@ -42,3 +42,32 @@ git branch -M main
 git push -u origin main
 git config --global user.name "Satyam Gangwar"
 git config --global user.email "satyam.gangwar@highspring.in"
+git add .
+git commit -m "Initial Cloud Run practical assignment"
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+git config --global --unset credential.helper
+git push -u origin main
+ls
+cd deploy_app/
+ls
+cd .
+ls
+cd.
+cd ..
+ls
+nano .gitignore 
+git rm -r --cached .gemini .cloudshell __pycache__ 2>/dev/null
+git ad .

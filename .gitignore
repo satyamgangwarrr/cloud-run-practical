@@ -1,3 +1,24 @@
+# Cloud Shell / system
+.gemini/
+.cloudshell/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+.env
+
+# Node
+node_modules/
 __pycache__/
 *.pyc
 .env
