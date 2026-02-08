@@ -22,4 +22,5 @@ __pycache__/
 # Logs & env
 *.log
 .env
+.bash_logout
 
