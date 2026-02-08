@@ -1,24 +1,25 @@
-# Cloud Shell / system
+# Cloud Shell / system files
+.config/
+.docker/
 .gemini/
+.npm/
 .cloudshell/
-.vscode/
+
+# Shell & OS
+.bash_history
+.bashrc
+.gitconfig
+.profile
+.sudo_as_admin_successful
+README-cloudshell.txt
+.DS_Store
+Thumbs.db
 
 # Python
 __pycache__/
 *.pyc
-*.pyo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+# Logs & env
 *.log
-
 .env
 
-# Node
-node_modules/
-__pycache__/
-*.pyc
-.env
