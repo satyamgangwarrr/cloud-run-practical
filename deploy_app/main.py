@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 #start time
 start_time = time.time()
-
+#normal_mode
 def calculate_health_score(cpu_usage, memory_usage, uptime):
     health = 0
 
@@ -40,7 +40,7 @@ def calculate_health_score(cpu_usage, memory_usage, uptime):
     return health
 
 
-# ---------- GAMER MODE ALGORITHM 🎮 ----------
+#gamer_mode
 def calculate_gamer_health(cpu_usage, memory_usage, uptime):
     health = 100
 
