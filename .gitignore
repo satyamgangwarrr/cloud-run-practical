@@ -24,3 +24,6 @@ __pycache__/
 .env
 .bash_logout
 
+# Python virtual environment
+venv/
+
