@@ -76,7 +76,7 @@ Steps followed:
 ## Cloud Run Live URL
 The deployed application is accessible at:
 
-https://hello-cloud-run-370498901616.us-central1.run.app
+[https://satyam-gangwar-370498901616.us-central1.run.app/]
 
 ---
 
