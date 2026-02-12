@@ -74,23 +74,156 @@ The UI also shows a live clock and server uptime that tick in real time without 
 
 ---
 
-## Health Score Formula
+## Health Score Algorithm
+
+### Pipeline Overview
 
 ```
-score = 100 − (cpu_usage × 0.2) − (mem_usage × 0.3)
+/proc/stat          /proc/meminfo
+     │                    │
+     ▼                    ▼
+ cpu_usage%          mem_usage%
+     │                    │
+     └────────┬───────────┘
+              ▼
+   base_score = 100 − (cpu × 0.2) − (mem × 0.3)
+              │
+              ▼
+   penalty check (hard thresholds)
+              │
+              ▼
+   final_score  +  status label  +  alerts[]
 ```
 
-Penalties applied on top:
-- CPU > 85% → −5
-- Memory > 90% → −10
-- Both exceeded → additional overload alert
+---
 
-| Score | Status |
-|---|---|
-| ≥ 80 | EXCELLENT |
-| 60–79 | FAIR |
-| 40–59 | POOR |
-| < 40 | CRITICAL |
+### Step 1 — Raw Metric Collection
+
+**CPU** is read from the first line of `/proc/stat`:
+
+```
+cpu  user  nice  system  idle  iowait  ...
+```
+
+```
+total = user + nice + system + idle + iowait
+usage = (user + system) / total × 100
+```
+
+Only `user` and `system` time count toward load. `iowait` is excluded because on Cloud Run, I/O wait reflects infrastructure latency outside the app's control. A floor of `0.1%` is applied so idle containers don't report exactly zero.
+
+**Memory** is read from `/proc/meminfo`:
+
+```
+used     = MemTotal − MemAvailable
+used_pct = used / MemTotal × 100
+avail_pct = MemAvailable / MemTotal × 100
+swap_pct  = (SwapTotal − SwapFree) / SwapTotal × 100
+```
+
+`MemAvailable` is preferred over `MemFree` because it accounts for reclaimable cache — a more accurate picture of what the kernel can actually hand to a new process.
+
+---
+
+### Step 2 — Human Label Mapping
+
+Raw percentages are bucketed into labels for readability.
+
+**CPU labels:**
+
+| Metric | Range | Label |
+|---|---|---|
+| Workload Level | usage < 40% | Low |
+| | 40% ≤ usage < 70% | Medium |
+| | usage ≥ 70% | High |
+| Responsiveness | usage < 30% | Fast |
+| | 30% ≤ usage < 60% | Slightly Slow |
+| | usage ≥ 60% | Slow |
+| Capacity Left | usage < 60% | Good |
+| | 60% ≤ usage < 80% | Limited |
+| | usage ≥ 80% | Critical |
+
+**Memory labels:**
+
+| Metric | Range | Label |
+|---|---|---|
+| Comfort Level | avail > 30% | Comfortable |
+| | 15% < avail ≤ 30% | Tight |
+| | avail ≤ 15% | Critical |
+| Multitasking Ability | swap < 10% | Smooth |
+| | 10% ≤ swap < 30% | Limited |
+| | swap ≥ 30% | Poor |
+| Stability Risk | used < 80% | Low |
+| | 80% ≤ used < 90% | Medium |
+| | used ≥ 90% | High |
+
+---
+
+### Step 3 — Base Score Calculation
+
+```
+base_score = 100 − (cpu_usage × 0.2) − (mem_usage × 0.3)
+```
+
+**Why different weights?**
+
+- **CPU (×0.2):** CPU spikes are transient. The kernel scheduler recovers quickly, and a busy CPU rarely leads to a crash. At 100% CPU, the penalty is 20 points — significant but not catastrophic.
+- **Memory (×0.3):** Memory exhaustion is harder to recover from. When available memory runs out, the kernel invokes the OOM killer, terminating processes. At 100% memory usage, the penalty is 30 points — reflecting a more serious risk.
+
+---
+
+### Step 4 — Penalty Conditions
+
+On top of the base score, hard penalties apply when usage crosses critical thresholds:
+
+| Condition | Penalty | Alert Added |
+|---|---|---|
+| CPU > 85% | −5 | "CPU saturation risk detected" |
+| Memory > 90% | −10 | "Memory exhaustion risk detected" |
+| Both CPU > 85% and Memory > 90% | 0 (additional) | "System overload condition" |
+
+The combined condition adds an alert but no extra point penalty — the individual penalties already capture the severity.
+
+Final score is clamped to a minimum of 0.
+
+---
+
+### Step 5 — Status Classification
+
+```
+score ≥ 80  →  EXCELLENT: System running smoothly
+score ≥ 60  →  FAIR: Moderate resource usage
+score ≥ 40  →  POOR: Performance degradation detected
+score  < 40  →  CRITICAL: System stability at risk
+```
+
+---
+
+### Worked Example
+
+Suppose at analysis time: **CPU at 55%, memory at 72%.**
+
+```
+base_score = 100 − (55 × 0.2) − (72 × 0.3)
+           = 100 − 11 − 21.6
+           = 67.4
+
+Penalty check:
+  CPU 55% → not > 85%, no penalty
+  Mem 72% → not > 90%, no penalty
+
+final_score = 67.4  →  FAIR: Moderate resource usage
+
+Labels:
+  CPU workload:    Medium  (40% ≤ 55% < 70%)
+  CPU response:    Slightly Slow  (30% ≤ 55% < 60%)
+  CPU capacity:    Limited  (60% ≤ 55%... wait, 55% < 60% → Good)
+  Mem comfort:     Comfortable  (avail = 28% > ... Tight if avail ≤ 30%)
+  Mem multitask:   Smooth  (swap assumed 0%)
+  Mem stability:   Low  (72% < 80%)
+
+Alert: "System operating normally"
+```
 
 ---
 
