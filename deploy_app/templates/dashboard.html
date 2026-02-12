@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0f0f0f;
+            --paper: #f4f1eb;
+            --accent: #c8401a;
+            --muted: #8a8578;
+            --border: #d6d0c4;
+            --card: #fdfbf7;
+            --green: #1a7a3c;
+            --yellow: #b07d1a;
+            --red: #c8401a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--paper);
+            min-height: 100vh;
+            color: var(--ink);
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--ink);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 36px;
+            height: 52px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .topbar-left {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-left .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 2s ease infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+            50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0.08); }
+        }
+
+        .topbar-right {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .live-time {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.75rem;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 32px 64px;
+        }
+
+        .score-banner {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 32px;
+            background: var(--ink);
+            border-radius: 12px;
+            padding: 32px 40px;
+            margin-bottom: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-banner::after {
+            content: '';
+            position: absolute;
+            right: -40px; top: -40px;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.08;
+        }
+
+        .score-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 4.5rem;
+            font-weight: 500;
+            line-height: 1;
+            color: #fff;
+        }
+
+        .score-num span {
+            font-size: 1.8rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .score-meta h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.7);
+        }
+
+        .score-timestamp {
+            text-align: right;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.35);
+            line-height: 1.9;
+        }
+
+        .score-timestamp strong {
+            color: rgba(255,255,255,0.6);
+            font-weight: 500;
+        }
+
+        .section-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .card-body {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: start;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-bar {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.6;
+            transition: width 1s ease;
+        }
+
+        .metric-label {
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .metric-meaning {
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 300;
+            margin-top: 3px;
+        }
+
+        .metric-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .metric-tag {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            padding: 3px 8px;
+            border-radius: 3px;
+            text-align: right;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .tag-good { background: rgba(26,122,60,0.1);  color: var(--green); }
+        .tag-warn { background: rgba(176,125,26,0.1); color: var(--yellow); }
+        .tag-bad  { background: rgba(200,64,26,0.1);  color: var(--red); }
+
+        .alerts-card {
+            background: var(--card);
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            padding: 24px;
+            margin-bottom: 36px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 6px;
+            background: var(--paper);
+            border: 1px solid var(--border);
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--ink);
+            line-height: 1.5;
+        }
+
+        .alert-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-meta {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--muted);
+            line-height: 1.9;
+        }
+
+        .footer-meta strong {
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .btn-back {
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid var(--ink);
+            padding: 10px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-back:hover {
+            background: var(--ink);
+            color: #fff;
+        }
+
+        @media (max-width: 700px) {
+            .topbar { padding: 0 20px; }
+            .page { padding: 28px 16px 48px; }
+            .score-banner { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
+            .score-num { font-size: 3.2rem; }
+            .score-timestamp { text-align: left; }
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="topbar-left">
+            <span class="dot"></span>
+            SYS-MON &mdash; Analysis Report
+        </div>
+        <div class="topbar-right">
+            <span>Cloud Run</span>
+            <span class="live-time" id="live-clock-top">--:--:--</span>
+        </div>
+    </div>
+
+    <div class="page">
+
+        <div class="score-banner">
+            <div class="score-num" id="healthScore">--<span>/100</span></div>
+            <div class="score-meta">
+                <h2>Health Score</h2>
+                <div class="status-badge">
+                    <span class="dot" style="background:#22c55e; width:6px; height:6px;"></span>
+                    <span id="statusText">Loading&hellip;</span>
+                </div>
+            </div>
+            <div class="score-timestamp" id="scoreTimestamp">&mdash;</div>
+        </div>
+
+        <div id="alertsSection" style="display:none;" class="alerts-card">
+            <div class="section-label">Alerts</div>
+            <div id="alertsList"></div>
+        </div>
+
+        <div class="section-label">Metrics</div>
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <div class="card-title">CPU</div>
+                </div>
+                <div class="card-body" id="cpuCard"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-title">Memory</div>
+                </div>
+                <div class="card-body" id="memCard"></div>
+            </div>
+        </div>
+
+        <div class="footer-row">
+            <div class="footer-meta" id="footerMeta">&mdash;</div>
+            <button class="btn-back" onclick="window.location.href='/'">← Back</button>
+        </div>
+
+    </div>
+
+    <script>
+        function updateClock() {
+            document.getElementById('live-clock-top').textContent =
+                new Date().toLocaleTimeString('en-US', { hour12: false });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function tagClass(label) {
+            const good = ['Low','Fast','Good','Comfortable','Smooth','Excellent'];
+            const warn = ['Medium','Slightly Slow','Limited','Tight'];
+            for (const w of warn) if (label.includes(w)) return 'tag-warn';
+            for (const g of good) if (label.includes(g)) return 'tag-good';
+            return 'tag-bad';
+        }
+
+        function barWidth(value) {
+            const m = value.match(/([\d.]+)%/);
+            return m ? Math.min(parseFloat(m[1]), 100) : 30;
+        }
+
+        function createMetricRow(label, value, meaning, tag) {
+            return `
+                <div class="metric-row">
+                    <div>
+                        <div class="metric-label">${label}</div>
+                        <div class="metric-meaning">${meaning}</div>
+                    </div>
+                    <div>
+                        <div class="metric-value">${value}</div>
+                        <div class="metric-tag ${tagClass(tag)}">${tag}</div>
+                    </div>
+                    <div class="metric-bar" style="width:${barWidth(value)}%"></div>
+                </div>`;
+        }
+
+        const data = JSON.parse(localStorage.getItem('data'));
+
+        if (!data) {
+            document.querySelector('.page').innerHTML =
+                '<div style="text-align:center;padding:80px 20px;color:var(--muted);font-family:DM Mono,monospace;font-size:0.85rem;">No data. <a href="/" style="color:var(--ink)">Go back →</a></div>';
+        } else {
+            document.getElementById('healthScore').innerHTML = `${data.health_score.toFixed(1)}<span>/100</span>`;
+            document.getElementById('statusText').textContent = data.status;
+
+            const t = new Date(data.timestamp);
+            const h = Math.floor(data.uptime_seconds / 3600);
+            const m = Math.floor((data.uptime_seconds % 3600) / 60);
+            const s = data.uptime_seconds % 60;
+
+            document.getElementById('scoreTimestamp').innerHTML =
+                `<strong>Captured</strong><br>${t.toLocaleString('en-US', {
+                    month:'short', day:'numeric', year:'numeric',
+                    hour:'2-digit', minute:'2-digit', second:'2-digit'
+                })}<br><strong>Uptime</strong><br>${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+            document.getElementById('footerMeta').innerHTML =
+                `<strong>Analysis captured:</strong> ${t.toLocaleString()}<br>` +
+                `<strong>Server uptime:</strong> ${h}h ${m}m ${s}s`;
+
+            if (data.alerts && data.alerts.length > 0) {
+                document.getElementById('alertsList').innerHTML =
+                    data.alerts.map(a => `<div class="alert-item"><div class="alert-dot"></div>${a}</div>`).join('');
+                document.getElementById('alertsSection').style.display = 'block';
+            }
+
+            const cpu = data.cpu_metrics;
+            document.getElementById('cpuCard').innerHTML =
+                createMetricRow('Workload Level', cpu.workload_level.value, cpu.workload_level.meaning, cpu.workload_level.label) +
+                createMetricRow('Responsiveness',  cpu.responsiveness.value,  cpu.responsiveness.meaning,  cpu.responsiveness.label) +
+                createMetricRow('Capacity Left',   cpu.capacity_left.value,   cpu.capacity_left.meaning,   cpu.capacity_left.label);
+
+            const mem = data.memory_metrics;
+            document.getElementById('memCard').innerHTML =
+                createMetricRow('Comfort Level',        mem.comfort_level.value,        mem.comfort_level.meaning,        mem.comfort_level.label) +
+                createMetricRow('Multitasking Ability', mem.multitasking_ability.value, mem.multitasking_ability.meaning, mem.multitasking_ability.label) +
+                createMetricRow('Stability Risk',       mem.stability_risk.value,       mem.stability_risk.meaning,       mem.stability_risk.label);
+        }
+    </script>
+</body>
+</html>
