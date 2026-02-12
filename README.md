@@ -1,4 +1,4 @@
-# Cloud Run Practical Assignment
+# Cloud Run Assignment
 
 ## Objective
 This project demonstrates basic cloud computing skills including Linux shell scripting, containerization, and deployment of a serverless application on Google Cloud Run.
