@@ -48,7 +48,6 @@ The UI also shows a live clock and server uptime that tick in real time without 
 | `/` | GET | Landing page |
 | `/dashboard` | GET | Results dashboard |
 | `/analyze` | GET | Returns JSON with CPU, memory, health score |
-| `/uptime` | GET | Returns server uptime in seconds |
 
 ### Sample `/analyze` Response
 
