@@ -99,9 +99,6 @@ def home():
 def dashboard():
     return render_template("dashboard.html")
 
-@app.route("/uptime")
-def uptime():
-    return jsonify({"uptime_seconds": int(time.time() - start_time)})
 
 @app.route("/analyze")
 def analyze():
