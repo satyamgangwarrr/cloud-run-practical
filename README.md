@@ -109,7 +109,7 @@ total = user + nice + system + idle + iowait
 usage = (user + system) / total × 100
 ```
 
-Only `user` and `system` time count toward load. `iowait` is excluded because on Cloud Run, I/O wait reflects infrastructure latency outside the app's control. A floor of `0.1%` is applied so idle containers don't report exactly zero.
+Only `user` and `system` time count toward load. `iowait` is excluded because on Cloud Run, I/O wait reflects infrastructure latency outside the app's control.
 
 **Memory** is read from `/proc/meminfo`:
 
